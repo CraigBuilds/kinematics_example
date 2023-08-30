@@ -47,7 +47,9 @@ class JointCanvas(FigureCanvasTkAgg):
         """
         Plot the joint positions on the canvas, joining them with lines. The points are drawn in order of the list.
         """
-        self.__joint_positions = joint_positions
+        # only cache the joint positions if they are being drawn as a line (do not cache the target position)
+        if style == "o-":
+            self.__joint_positions = joint_positions
         for i in range(len(joint_positions) - 1):
             self.ax.plot(
                 [joint_positions[i][0], joint_positions[i + 1][0]],
