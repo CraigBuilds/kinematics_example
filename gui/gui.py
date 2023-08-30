@@ -31,11 +31,11 @@ class GUI(tk.Frame):
         """
         self.joint_canvas.clear()
         # calculate the joint positions
-        joint_positions = forward_kinematics(self.robot)
+        joint_coords = forward_kinematics(self.robot)
         # plot the robot
-        self.joint_canvas.plot_joints(joint_positions)
+        self.joint_canvas.plot_coordinates(joint_coords)
         # print the end effector position
-        self.joint_canvas.print_end_effector_pose(joint_positions)
+        self.joint_canvas.print_end_effector_pose(joint_coords)
 
     def on_click(self, click: Union[SingleClick, ClickAndDrag]):
         """
@@ -52,4 +52,4 @@ class GUI(tk.Frame):
             robot_copy = deepcopy(self.robot)
             set_joint_angles(robot_copy, solution)
             joint_positions = forward_kinematics(robot_copy)
-            self.joint_canvas.plot_joints(joint_positions, style="o--")
+            self.joint_canvas.plot_coordinates(joint_positions, style="o--")

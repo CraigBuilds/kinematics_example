@@ -43,7 +43,7 @@ class JointCanvas(FigureCanvasTkAgg):
         self.ax.set_ylim(-3, 3)
         self.ax.set_aspect("equal")
 
-    def plot_joints(self, joint_positions: List[Tuple[float, float]], style: str = "o-"):
+    def plot_coordinates(self, joint_positions: List[Tuple[float, float]], style: str = "o-"):
         """
         Plot the joint positions on the canvas, joining them with lines. The points are drawn in order of the list.
         """
@@ -144,7 +144,7 @@ class JointCanvas(FigureCanvasTkAgg):
         current_pos = (event.xdata, event.ydata)
         #draw a line from start to current position
         self.clear()
-        self.plot_joints(self.__joint_positions)
+        self.plot_coordinates(self.__joint_positions)
         self.ax.plot(
             [self.__start_pos[0], current_pos[0]],
             [self.__start_pos[1], current_pos[1]],
