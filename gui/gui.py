@@ -26,6 +26,9 @@ class GUI(tk.Frame):
         self.update()
 
     def update(self):
+        """
+        This function is called whenever the sliders are moved or the canvas is clicked
+        """
         self.joint_canvas.clear()
         # calculate the joint positions
         joint_positions = forward_kinematics(self.robot)
@@ -35,6 +38,9 @@ class GUI(tk.Frame):
         self.joint_canvas.print_end_effector_pose(joint_positions)
 
     def on_click(self, click: Union[SingleClick, ClickAndDrag]):
+        """
+        This function is called whenever the canvas is clicked
+        """
         self.joint_canvas.clear()
         self.update()
         # draw the target crosshair
