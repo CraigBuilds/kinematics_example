@@ -1,10 +1,9 @@
 from dataclasses import dataclass
 import tkinter as tk
-from tracemalloc import start
-from typing import Callable, List, Tuple, Union
+from typing import Callable, List, Optional, Tuple, Union
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
-from math import atan2
+from math import atan2, cos, sin
 from matplotlib.backend_bases import MouseEvent
 
 class JointCanvas(FigureCanvasTkAgg):
@@ -14,7 +13,7 @@ class JointCanvas(FigureCanvasTkAgg):
 
     def __init__(
         self,
-        on_click: Callable[[Union['SingleClick', 'ClickAndDragStart', 'ClickAndDragEnd']], None],
+        on_click: Callable[[Union['SingleClick', 'ClickAndDrag']], None],
         master: tk.Frame,
     ):
         """
@@ -28,9 +27,12 @@ class JointCanvas(FigureCanvasTkAgg):
         # add event listeners
         self.mpl_connect("button_press_event", self.__on_mouse_press)
         self.mpl_connect("button_release_event", self.__on_mouse_release)
+        self.mpl_connect("motion_notify_event", self.__on_mouse_drag)
         # draw the canvas
         self.ax = self.figure.add_subplot(111)
         self.draw()
+        # cache joint positions so they can be redrawn from outside the plot function
+        self.__joint_positions: List[Tuple[float, float]] = []
 
     def clear(self):
         """
@@ -45,6 +47,7 @@ class JointCanvas(FigureCanvasTkAgg):
         """
         Plot the joint positions on the canvas, joining them with lines. The points are drawn in order of the list.
         """
+        self.__joint_positions = joint_positions
         for i in range(len(joint_positions) - 1):
             self.ax.plot(
                 [joint_positions[i][0], joint_positions[i + 1][0]],
@@ -69,41 +72,92 @@ class JointCanvas(FigureCanvasTkAgg):
         )
         self.draw()
 
-    def draw_target_crosshair(self, x: float, y: float):
+    def __draw_target_crosshair(self, x: float, y: float):
         """
         Draw a cross at x,y
         """
         self.ax.plot(x, y, "rx")
         self.draw()
 
-    def __on_mouse_release(self, event: MouseEvent):
-        #TODO
-        ...
+    def __draw_target_arrow(self, x: float, y: float, angle: float):
+        """
+        Draw an arrow at x,y pointing in the direction of angle
+        """
+        self.ax.arrow(
+            x,
+            y,
+            0.5 * cos(angle),
+            0.5 * sin(angle),
+            head_width=0.1,
+            head_length=0.1,
+            fc="k",
+            ec="k",
+        )
+        self.draw()
 
+    __start_pos: Optional[Tuple[float, float]] = None
     def __on_mouse_press(self, event: MouseEvent):
+        self.__start_pos = (event.xdata, event.ydata)
+
+    def __on_mouse_release(self, event: MouseEvent):
         """
         If right click, clear the target position, otherwise emit a click event
         """
         # right click to clear the target position
         if event.button == 3:
            self.clear()
+           self.__start_pos = None
            return
-        is_within_plot = (event.xdata is not None) and (event.ydata is not None)
-        if is_within_plot:
+        #if not in plot area, return
+        if (event.xdata is None) or (event.ydata is None):
+            self.__start_pos = None
+            return
+
+        end_x, end_y = event.xdata, event.ydata
+        start_x, start_y = self.__start_pos
+        # if distance between start and end is small, emit a single click event
+        if (start_x - end_x) ** 2 + (start_y - end_y) ** 2 < 0.1:
+            #emit event so kinematics can be calculated
             self.on_click(SingleClick(x=event.xdata, y=event.ydata))
-        #TODO emit click and drag event so we can set the target pose, not just the target position
+            # draw the target crosshair
+            self.__draw_target_crosshair(event.xdata, event.ydata)
+            self.__start_pos = None
+            return
+        # otherwise, emit a click and drag event
+        else:
+            #emit event so kinematics can be calculated
+            angle = atan2(end_y - start_y, end_x - start_x)
+            self.on_click(ClickAndDrag(x=start_x, y=start_y, angle=angle))
+            # draw the target crosshair
+            self.__draw_target_crosshair(start_x, start_y)
+            self.__draw_target_arrow(start_x, start_y, angle)
+        
+        self.__start_pos = None
+
+    def __on_mouse_drag(self, event: MouseEvent):
+        if self.__start_pos is None:
+            return
+        if (event.xdata is None) or (event.ydata is None):
+            return
+        current_pos = (event.xdata, event.ydata)
+        #draw a line from start to current position
+        self.clear()
+        self.plot_joints(self.__joint_positions)
+        self.ax.plot(
+            [self.__start_pos[0], current_pos[0]],
+            [self.__start_pos[1], current_pos[1]],
+            "r-",
+        )
+        self.draw()
+        
+
 
 @dataclass
 class SingleClick:
     x: float
     y: float
 @dataclass
-class ClickAndDragStart:
+class ClickAndDrag:
     x: float
     y: float
-@dataclass
-class ClickAndDragEnd:
-    start_x: float
-    start_y: float
-    end_x: float
-    end_y: float
+    angle: float

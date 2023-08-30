@@ -2,7 +2,7 @@ from kinematics import *
 import tkinter as tk
 from typing import Union
 from copy import deepcopy
-from gui.joint_canvas import ClickAndDragEnd, JointCanvas, SingleClick, ClickAndDragStart
+from gui.joint_canvas import JointCanvas, SingleClick, ClickAndDrag
 from gui.sliders import Sliders
 
 
@@ -37,14 +37,12 @@ class GUI(tk.Frame):
         # print the end effector position
         self.joint_canvas.print_end_effector_pose(joint_positions)
 
-    def on_click(self, click: Union[SingleClick, ClickAndDragStart, ClickAndDragEnd]):
+    def on_click(self, click: Union[SingleClick, ClickAndDrag]):
         """
         This function is called whenever the canvas is clicked
         """
         self.joint_canvas.clear()
         self.update()
-        # draw the target crosshair
-        self.joint_canvas.draw_target_crosshair(click.x, click.y)
         # calculate the inverse kinematics
         solutions = inverse_kinematics_2dof(
             links = [link for link in self.robot.components if isinstance(link, Link)],
