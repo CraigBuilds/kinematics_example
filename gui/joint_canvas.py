@@ -1,14 +1,10 @@
 from dataclasses import dataclass
 import tkinter as tk
-from typing import Callable, List, Tuple, Optional, Union
+from typing import Callable, List, Tuple, Union
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
-from matplotlib.axes._axes import Axes
 from math import atan2
 from matplotlib.backend_bases import MouseEvent
-from kinematics import Robot, Joint, Link, forward_kinematics, inverse_kinematics_2dof, set_joint_angles
-from copy import deepcopy
-
 
 class JointCanvas(FigureCanvasTkAgg):
     """
@@ -20,10 +16,14 @@ class JointCanvas(FigureCanvasTkAgg):
         on_click: Callable[[Union['SingleClick', 'ClickAndDrag']], None],
         master: tk.Frame,
     ):
+        """
+        Create a canvas with one axis subplot
+        """
         self.on_click = on_click
         super().__init__(Figure(figsize=(5, 5), dpi=100))
         # pack inside the master frame
-        self.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
+        self_as_tk = self.get_tk_widget()
+        self_as_tk.pack(side=tk.TOP, fill=tk.BOTH, expand=1)
         # add event listeners
         self.mpl_connect("button_press_event", self.__on_mouse_press)
         self.mpl_connect("button_release_event", self.__on_mouse_release)
@@ -32,12 +32,18 @@ class JointCanvas(FigureCanvasTkAgg):
         self.draw()
 
     def clear(self):
+        """
+        Clear the canvas subplot
+        """
         self.ax.clear()
         self.ax.set_xlim(-3, 3)
         self.ax.set_ylim(-3, 3)
         self.ax.set_aspect("equal")
 
     def plot_joints(self, joint_positions: List[Tuple[float, float]], style: str = "o-"):
+        """
+        Plot the joint positions on the canvas, joining them with lines. The points are drawn in order of the list.
+        """
         for i in range(len(joint_positions) - 1):
             self.ax.plot(
                 [joint_positions[i][0], joint_positions[i + 1][0]],
@@ -47,6 +53,9 @@ class JointCanvas(FigureCanvasTkAgg):
         self.draw()
 
     def print_end_effector_pose(self, joint_positions: List[Tuple[float, float]]):
+        """
+        Write the end effector position and angle on the canvas
+        """
         end_effector_pos = joint_positions[-1]
         prior_joint = joint_positions[-2]
         end_effector_angle = atan2(
@@ -60,6 +69,9 @@ class JointCanvas(FigureCanvasTkAgg):
         self.draw()
 
     def draw_target_crosshair(self, x: float, y: float):
+        """
+        Draw a cross at x,y
+        """
         self.ax.plot(x, y, "rx")
         self.draw()
 
@@ -68,12 +80,16 @@ class JointCanvas(FigureCanvasTkAgg):
         ...
 
     def __on_mouse_press(self, event: MouseEvent):
+        """
+        If right click, clear the target position, otherwise emit a click event
+        """
         # right click to clear the target position
         if event.button == 3:
            self.clear()
         # if the click is within the plot
         if (event.xdata is not None) and (event.ydata is not None):
             self.on_click(SingleClick(x=event.xdata, y=event.ydata))
+        #TODO emit click and drag event
 
 @dataclass
 class SingleClick:
