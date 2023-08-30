@@ -1,7 +1,6 @@
 from kinematics import *
 import tkinter as tk
-from matplotlib.backend_bases import MouseEvent
-from typing import Dict, Optional, Tuple, Union
+from typing import Union
 from copy import deepcopy
 from gui.joint_canvas import JointCanvas, SingleClick, ClickAndDrag
 from gui.sliders import Sliders
