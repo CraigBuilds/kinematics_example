@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 import tkinter as tk
+from tracemalloc import start
 from typing import Callable, List, Tuple, Union
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
@@ -13,7 +14,7 @@ class JointCanvas(FigureCanvasTkAgg):
 
     def __init__(
         self,
-        on_click: Callable[[Union['SingleClick', 'ClickAndDrag']], None],
+        on_click: Callable[[Union['SingleClick', 'ClickAndDragStart', 'ClickAndDragEnd']], None],
         master: tk.Frame,
     ):
         """
@@ -86,8 +87,9 @@ class JointCanvas(FigureCanvasTkAgg):
         # right click to clear the target position
         if event.button == 3:
            self.clear()
-        # if the click is within the plot
-        if (event.xdata is not None) and (event.ydata is not None):
+           return
+        is_within_plot = (event.xdata is not None) and (event.ydata is not None)
+        if is_within_plot:
             self.on_click(SingleClick(x=event.xdata, y=event.ydata))
         #TODO emit click and drag event so we can set the target pose, not just the target position
 
@@ -96,8 +98,12 @@ class SingleClick:
     x: float
     y: float
 @dataclass
-class ClickAndDrag:
+class ClickAndDragStart:
     x: float
     y: float
-    x0: float
-    y0: float
+@dataclass
+class ClickAndDragEnd:
+    start_x: float
+    start_y: float
+    end_x: float
+    end_y: float

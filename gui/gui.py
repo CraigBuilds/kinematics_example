@@ -2,7 +2,7 @@ from kinematics import *
 import tkinter as tk
 from typing import Union
 from copy import deepcopy
-from gui.joint_canvas import JointCanvas, SingleClick, ClickAndDrag
+from gui.joint_canvas import ClickAndDragEnd, JointCanvas, SingleClick, ClickAndDragStart
 from gui.sliders import Sliders
 
 
@@ -37,7 +37,7 @@ class GUI(tk.Frame):
         # print the end effector position
         self.joint_canvas.print_end_effector_pose(joint_positions)
 
-    def on_click(self, click: Union[SingleClick, ClickAndDrag]):
+    def on_click(self, click: Union[SingleClick, ClickAndDragStart, ClickAndDragEnd]):
         """
         This function is called whenever the canvas is clicked
         """
