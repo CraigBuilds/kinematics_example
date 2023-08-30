@@ -89,7 +89,7 @@ class JointCanvas(FigureCanvasTkAgg):
         # if the click is within the plot
         if (event.xdata is not None) and (event.ydata is not None):
             self.on_click(SingleClick(x=event.xdata, y=event.ydata))
-        #TODO emit click and drag event
+        #TODO emit click and drag event so we can set the target pose, not just the target position
 
 @dataclass
 class SingleClick:
