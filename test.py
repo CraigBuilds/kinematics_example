@@ -2,6 +2,7 @@ import math
 from main import *
 import unittest
 
+
 class TestRobotFunctions(unittest.TestCase):
     def setUp(self):
         self.link1 = Link(id="l1", length=1.0)
@@ -20,7 +21,9 @@ class TestRobotFunctions(unittest.TestCase):
 
         self.joint1.angle = 90 * math.pi / 180
         self.joint2.angle = 90 * math.pi / 180
-        positions = [(round(x, 2), round(y, 2)) for x, y in forward_kinematics(self.robot)]
+        positions = [
+            (round(x, 2), round(y, 2)) for x, y in forward_kinematics(self.robot)
+        ]
         self.assertEqual(
             positions, [(0.0, 0.0), (0.0, 1.0), (0.0, 2.0)]
         )  # Both joints have an angle of 90, so we just go up on the y-axis.
@@ -38,12 +41,16 @@ class TestRobotFunctions(unittest.TestCase):
         # apply forward kinematics to check if the solutions are correct
         elbow_up = solutions["elbow_up"]
         set_joint_angles(self.robot, elbow_up)
-        positions = [(round(x, 2), round(y, 2)) for x, y in forward_kinematics(self.robot)]
+        positions = [
+            (round(x, 2), round(y, 2)) for x, y in forward_kinematics(self.robot)
+        ]
         self.assertEqual(positions, [(0.0, 0.0), (0.5, 1.0), (1.0, 0.0)])
 
         elbow_down = solutions["elbow_down"]
         set_joint_angles(self.robot, elbow_down)
-        positions = [(round(x, 2), round(y, 2)) for x, y in forward_kinematics(self.robot)]
+        positions = [
+            (round(x, 2), round(y, 2)) for x, y in forward_kinematics(self.robot)
+        ]
         self.assertEqual(positions, [(0.0, 0.0), (0.5, -1.0), (1.0, 0.0)])
 
 

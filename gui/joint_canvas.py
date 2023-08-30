@@ -1,0 +1,87 @@
+from dataclasses import dataclass
+import tkinter as tk
+from typing import Callable, List, Tuple, Optional, Union
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from matplotlib.figure import Figure
+from matplotlib.axes._axes import Axes
+from math import atan2
+from matplotlib.backend_bases import MouseEvent
+from kinematics import Robot, Joint, Link, forward_kinematics, inverse_kinematics_2dof, set_joint_angles
+from copy import deepcopy
+
+
+class JointCanvas(FigureCanvasTkAgg):
+    """
+    Plot the robot arm in a 2D plot with labeled sliders to control the joint angles and lengths
+    """
+
+    def __init__(
+        self,
+        on_click: Callable[[Union['SingleClick', 'ClickAndDrag']], None],
+        master: tk.Frame,
+    ):
+        self.on_click = on_click
+        super().__init__(Figure(figsize=(5, 5), dpi=100))
+        # pack inside the master frame
+        self.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
+        # add event listeners
+        self.mpl_connect("button_press_event", self.__on_mouse_press)
+        self.mpl_connect("button_release_event", self.__on_mouse_release)
+        # draw the canvas
+        self.ax = self.figure.add_subplot(111)
+        self.draw()
+
+    def clear(self):
+        self.ax.clear()
+        self.ax.set_xlim(-3, 3)
+        self.ax.set_ylim(-3, 3)
+        self.ax.set_aspect("equal")
+
+    def plot_joints(self, joint_positions: List[Tuple[float, float]], style: str = "o-"):
+        for i in range(len(joint_positions) - 1):
+            self.ax.plot(
+                [joint_positions[i][0], joint_positions[i + 1][0]],
+                [joint_positions[i][1], joint_positions[i + 1][1]],
+                style,
+            )
+        self.draw()
+
+    def print_end_effector_pose(self, joint_positions: List[Tuple[float, float]]):
+        end_effector_pos = joint_positions[-1]
+        prior_joint = joint_positions[-2]
+        end_effector_angle = atan2(
+            end_effector_pos[1] - prior_joint[1], end_effector_pos[0] - prior_joint[0]
+        )
+        self.ax.text(
+            end_effector_pos[0],
+            end_effector_pos[1],
+            f"({round(end_effector_pos[0], 2)},{round(end_effector_pos[1], 2)}, {round(end_effector_angle, 2)})",
+        )
+        self.draw()
+
+    def draw_target_crosshair(self, x: float, y: float):
+        self.ax.plot(x, y, "rx")
+        self.draw()
+
+    def __on_mouse_release(self, event: MouseEvent):
+        #TODO
+        ...
+
+    def __on_mouse_press(self, event: MouseEvent):
+        # right click to clear the target position
+        if event.button == 3:
+           self.clear()
+        # if the click is within the plot
+        if (event.xdata is not None) and (event.ydata is not None):
+            self.on_click(SingleClick(x=event.xdata, y=event.ydata))
+
+@dataclass
+class SingleClick:
+    x: float
+    y: float
+@dataclass
+class ClickAndDrag:
+    x: float
+    y: float
+    x0: float
+    y0: float
