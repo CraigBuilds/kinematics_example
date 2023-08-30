@@ -2,6 +2,8 @@ from gui.gui import GUI
 import tkinter as tk
 from kinematics import *
 
+#TODO general solution for inverse kinematics
+#TODO inverse kinematics solution for pose as well as position
 
 def main():
     root = tk.Tk()
